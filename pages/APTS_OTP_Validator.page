@@ -1,0 +1,275 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" id="APTS_OTP_Validator" controller="APTS_MigrateCustomSetting">
+
+
+
+
+
+
+<html lang="en">
+<head>
+<meta charset="utf-8"> </meta>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"> </link>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"> </link>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<style>
+.m-progress-bar {
+    min-height: 1em;
+    background: #c12d2d;
+    width: 5%;
+}
+</style>
+</head>
+<body>
+
+<div id='mainDiv'>
+
+Content is here ...............
+
+</div>
+
+
+<form class="modal multi-step" id="demo-modal-3">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title step-1" data-step="1">Step 1</h4>
+                <h4 class="modal-title step-2" data-step="2">Step 2</h4>
+                <h4 class="modal-title step-3" data-step="3">Final Step</h4>
+                <div class="m-progress">
+                    <div class="m-progress-bar-wrapper">
+                        <div class="m-progress-bar">
+                        </div>
+                    </div>
+                    <div class="m-progress-stats">
+                        <span class="m-progress-current">
+                        </span>
+                        /
+                        <span class="m-progress-total">
+                        </span>
+                    </div>
+                    <div class="m-progress-complete">
+                        Completed
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body step-1" data-step="1">
+                <input id='aptsEmail' type="email" class="form-control" placeholder="Apttus Email Address"></input>
+            </div>
+            <div class="modal-body step-2" data-step="2">
+                <input id='aptsOTP' type="number" class="form-control" placeholder="OTP"></input>
+            </div>
+            <div id='finalTextID' class="modal-body step-3" data-step="3">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="sendEvent('#demo-modal-3', 4)">Close</button>
+                <button type="button" class="btn btn-primary step step-1" data-step="1" onclick="sendEvent('#demo-modal-3', 2)">Continue</button>
+                <button type="button" class="btn btn-primary step step-2" data-step="2" onclick="sendEvent('#demo-modal-3', 1)">Back</button>
+                <button type="button" class="btn btn-primary step step-2" data-step="2" onclick="sendEvent('#demo-modal-3', 3)">Continue</button>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="container">
+
+</div>
+<script src="https://www.ngzhian.com/multi-step-modal/multi-step-modal.js"></script>
+<script>
+var val = '';
+var finalText = '';
+var importAgainInstanceURL  = '';
+var importAgainSessionID = '';
+var importAgainMiddleXMLString  = '';
+
+sendEvent = function(sel, step) {
+    console.log('IN STEP EEVENT ');
+    console.log( $('#aptsEmail').val() );
+    console.log( $('#aptsOTP').val() );
+    console.log(step);
+    //$(sel).trigger('next.m.' + step);
+
+    if(step == 2){
+            
+            //Lets generate 4 digit random number 
+            val = Math.floor(1000 + Math.random() * 9000);
+            console.log(val);
+            
+            
+            // Entered Email Address so send OTP to email address 
+            importExternalUserData('sbhatt.hac3@qtcqst.apttus.com','ShubhamDev7','JRn5SgymIyGgekzQ2a4Ip465','Production',$('#aptsEmail').val(),val,(res) => { 
+                console.log('@@@## res =>'+res);
+                console.log('@@@## res.success =>'+res.success);
+                console.log('@@@## res.ID =>'+res.id); 
+                console.log('@@@## res.importAgainInstanceURL =>'+res.importAgainInstanceURL); 
+                console.log('@@@## res.importAgainSessionID =>'+res.importAgainSessionID); 
+                console.log('@@@## res.importAgainMiddleXMLString =>'+res.importAgainMiddleXMLString);               
+                if(res && res.success === true && res.id && res.importAgainInstanceURL && res.importAgainSessionID && res.importAgainMiddleXMLString ){
+                    importAgainInstanceURL  =  res.importAgainInstanceURL ;
+                    importAgainSessionID  =  res.importAgainSessionID ;
+                    importAgainMiddleXMLString =  res.importAgainMiddleXMLString ; 
+                    importAgainMiddleXMLString = importAgainMiddleXMLString;              
+                }
+                debugger;
+            });
+                
+     }
+     
+     if(step == 3){
+     
+         //Lets match the send OTP & set the text
+         console.log(val);
+         console.log($('#aptsOTP').val());
+         if(val == $('#aptsOTP').val() ){
+         
+             //lets update success field in the Database
+                console.log('##$$%% IN SIDE '+importAgainInstanceURL+importAgainSessionID+importAgainMiddleXMLString);
+                
+                importAgainExternalUserData(importAgainInstanceURL,importAgainSessionID,importAgainMiddleXMLString,(res) => { 
+                    console.log('@@@## importAgainExternalUserData res =>'+res); 
+                    console.log('@@@## importAgainExternalUserData res.importAgainInstanceURL =>'+importAgainInstanceURL); 
+                    console.log('@@@## importAgainExternalUserData res.importAgainSessionID =>'+importAgainSessionID); 
+                    console.log('@@@## importAgainExternalUserData res.importAgainMiddleXMLString =>'+importAgainMiddleXMLString.replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>'));               
+                    if(res && res === true){
+                         finalText = 'You have successfully logged in...';
+                         $('#finalTextID').text(finalText);
+                         $("#mainDiv").show();
+                         localStorage.setItem('ftttp',new Date().toDateString() );               
+                    }else{
+                         finalText = 'Your database connection failed...';
+                         $("#mainDiv").hide(); 
+                         $('#finalTextID').text(finalText);                   
+                    }
+                    debugger;
+                });
+         
+             //finalText = 'You have successfully logged in...';
+             //$("#mainDiv").show();
+             //localStorage.setItem('ftttp',new Date().toDateString() );
+         }else{
+             finalText = 'Your login failed...';
+             $("#mainDiv").hide();
+             $('#finalTextID').text(finalText);
+         }
+         $('#finalTextID').text(finalText);         
+     }
+    
+    $(sel).trigger('next.m.' + step);
+    console.log('NEXT >>>>>>>>>>>>>');
+    console.log( $('#aptsEmail').val() );
+    console.log( $('#aptsOTP').val() );
+    console.log(step);    
+    
+}
+
+    $(document).ready(function(){
+      //sessionStorage.setItem("last_name", "Parker");
+      if(localStorage.getItem('ftttp') != new Date().toDateString() ){ 
+          $("#mainDiv").hide(); 
+          $("#demo-modal-3").modal('show');
+          //localStorage.setItem('ftttp','shown');
+       }  
+    });
+    
+ 
+function importExternalUserData(userName,password,token,environmentType,email,OTP,importExternalUserDataCallBack) {
+    console.log('IN importExternalUserData');
+    console.log('##SOURCE====> '+userName+password+token+environmentType+email+OTP);
+
+    Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.APTS_MigrateCustomSetting.importExternalUserData}', 
+        userName,password,token,environmentType,email,OTP,
+        function(result, event){
+            if (event.status) {
+                console.log('IN event => '+event);
+                console.log('IN event => '+event.type);
+                console.log('IN event => '+event.status);
+                console.log('IN result => '+result );
+                if(result){
+
+                        console.log('IN result S_ENDPOINT  => '+result );
+                        if(result == true){
+                            console.log('IN result TRUE  => '+result );
+                        }
+  
+                }
+
+                importExternalUserDataCallBack(result);               
+
+            } else if (event.type === 'exception') {
+               alert('ERROR1');
+            } else {
+               alert('ERROR2'); 
+            }
+        }, 
+        {escape: true}
+    );
+}    
+
+
+
+
+function importAgainExternalUserData(importAgainInstanceURL,importAgainSessionID,importAgainMiddleXMLString,importAgainExternalUserDataCallBack) {
+    console.log('IN importAgainExternalUserData');
+    console.log('## importAgainExternalUserData ##$@@ SOURCE====> '+importAgainInstanceURL+importAgainSessionID+importAgainMiddleXMLString);
+
+                //Logic of replacing string because of  ASCII problem 
+                var replaceQuotRegex = new RegExp('&'+'qu'+'ot;', 'g');
+                var replaceQuotRegex1 = new RegExp('&'+'l'+'t;', 'g');
+                var replaceQuotRegex2 = new RegExp('&'+'g'+'t;', 'g');
+                var abc = importAgainMiddleXMLString.replace( replaceQuotRegex,'"');
+                abc = abc.replace( replaceQuotRegex1,'<');
+                abc = abc.replace( replaceQuotRegex2,'>');
+                
+
+
+    Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.APTS_MigrateCustomSetting.doImport}', 
+        importAgainInstanceURL,importAgainSessionID,'update',abc,
+        function(result, event){
+            if (event.status) {
+                console.log('IN event => '+event);
+                console.log('IN event => '+event.type);
+                console.log('IN event => '+event.status);
+                console.log('IN result => '+result );
+                if(result){
+
+                        console.log('IN result S_ENDPOINT  => '+result.success);
+                        if(result.success === true){
+                            console.log('IN result TRUE  => '+result.success);
+                        }
+  
+                }
+
+                importAgainExternalUserDataCallBack(result.success);               
+
+            } else if (event.type === 'exception') {
+               alert('ERROR1');
+            } else {
+               alert('ERROR2'); 
+            }
+        }, 
+        {escape: true}
+    );
+}        
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</apex:page>
